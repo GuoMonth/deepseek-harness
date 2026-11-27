@@ -212,6 +212,7 @@ export function apply(ctx: Context, config: Config): void {
   const handoffBrowser = config.openBrowser && !launchedThroughSsh(launchEnvironmentOf(ctx))
   /** The advertised root: the canonical `publicUrl`, or the listener's own origin. */
   const appRootUrl = (): string => publicUrl ?? ctx.webServer.getOrigin()
+  ctx.on('webserver/advertised-url', () => publicUrl)
   ctx.provide('webApp', { getAdvertisedUrl: appRootUrl } satisfies WebApp)
   ctx.plugin(FrontendStatic, { distIndex: internals.resolveDistIndex() })
   if (config.surfaceContext) {

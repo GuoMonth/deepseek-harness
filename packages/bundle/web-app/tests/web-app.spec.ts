@@ -120,6 +120,7 @@ describe('web-app runtime glue', () => {
     const contributions = shellContributions(ctx)
     apply(ctx, new Config({ printUrl: false, openBrowser: false, surfaceContext: true, publicUrl: 'https://proxy.example:8443/web' }))
     expect(ctx.webApp.getAdvertisedUrl()).toBe('https://proxy.example:8443/web/')
+    expect(ctx.bail(ctx.webServer, 'webserver/advertised-url')).toBe('https://proxy.example:8443/web/')
     await vi.waitFor(() => {
       expect(contributions.find(item => item.name === 'web-runtime')?.resolve()).toEqual({
         DSH_WEB_URL: 'https://proxy.example:8443/web/',

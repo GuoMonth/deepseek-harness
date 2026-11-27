@@ -1,5 +1,5 @@
 /** OAuth lifecycle regressions against the real SDK, callback server, and file-backed store. */
-import { IncomingMessage, ServerResponse } from 'node:http'
+import { get, IncomingMessage, ServerResponse } from 'node:http'
 import { Socket } from 'node:net'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import { Client, UnauthorizedError } from '@modelcontextprotocol/client'
@@ -80,6 +80,32 @@ describe('MCP OAuth', () => {
     url.searchParams.set('iss', authorization.origin)
     url.searchParams.set('code', 'fixture-code')
     expect((await fetch(url)).status).toBe(200)
+    await phase(() => owner.current(), 'authorized')
+  })
+
+  it('advertises the proxy HTTPS root and accepts the forwarded prefix-stripped callback', async () => {
+    const world = await oauthWorld()
+    world.ctx.on('webserver/advertised-url', () => 'https://proxy.example.test/ui/')
+    const owner = world.owner()
+    await owner.start()
+    const waiting = await phase(() => owner.current(), 'waiting-browser')
+    const authorization = new URL(waiting.authorizationUrl!)
+    const redirect = new URL(authorization.searchParams.get('redirect_uri')!)
+    expect(redirect.origin).toBe('https://proxy.example.test')
+    expect(redirect.pathname).toMatch(/^\/ui\/mcp\/oauth\/callback\/[a-f0-9]{64}$/)
+    const forwarded = new URL(redirect.pathname.slice('/ui'.length), world.ctx.webServer.getOrigin())
+    forwarded.searchParams.set('state', authorization.searchParams.get('state')!)
+    forwarded.searchParams.set('iss', authorization.origin)
+    forwarded.searchParams.set('code', 'fixture-code')
+    expect((await fetch(forwarded)).status).toBe(404)
+    const status = await new Promise<number | undefined>((resolve, reject) => {
+      get(forwarded, { headers: { host: redirect.host, 'sec-fetch-site': 'cross-site' } }, (response) => {
+        response.on('error', reject)
+        response.on('end', () => { resolve(response.statusCode) })
+        response.resume()
+      }).on('error', reject)
+    })
+    expect(status).toBe(200)
     await phase(() => owner.current(), 'authorized')
   })
 

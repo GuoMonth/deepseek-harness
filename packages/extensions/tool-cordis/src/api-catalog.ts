@@ -5170,6 +5170,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         throws: ['before `listen` binds a port, or when the bind address has no URL form.'],
       },
       {
+        signature: 'getAdvertisedUrl(): string',
+        description: 'Resolve the browser-facing root used to build callbacks through a reverse proxy.',
+        parameters: [],
+        returns: 'the advertised application root, or the listener origin.',
+      },
+      {
         signature: 'register(route: WebRoute | WebResourceRoute): () => void',
         description: 'Register a named route. Duplicate (kind, path) throws — route patterns are a composition-level contract, so a collision is a misconfiguration.',
         parameters: [{ name: 'route', description: 'kind, path, and the owning handler or resource.' }],
@@ -6188,6 +6194,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     signature: '\'web/providers-changed\'(): void',
     summary: 'The set of registered search or fetch providers changed: one provider registered, or its registration was disposed.',
     description: 'The set of registered search or fetch providers changed: one provider registered, or its registration was disposed. Payload-free; consumers re-read `ctx.web.listProviders()` (Remote `web/listProviders`) for the new list. Fires after each committed registry mutation. Observer failures are contained and cannot veto the mutation.',
+    parameters: [],
+  },
+  {
+    name: 'webserver/advertised-url',
+    mode: 'bail',
+    signature: '\'webserver/advertised-url\'(): string | undefined',
+    summary: 'Resolve the configured browser-facing application root.',
+    description: 'Resolve the configured browser-facing application root.',
     parameters: [],
   },
   {

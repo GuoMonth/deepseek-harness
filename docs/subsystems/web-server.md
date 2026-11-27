@@ -272,6 +272,12 @@ The browser HTTP carrier service. Activation loads any configured TLS material, 
 getOrigin(): string
 
 /**
+ * Resolve the browser-facing root used to build callbacks through a reverse proxy.
+ * @returns the advertised application root, or the listener origin.
+ */
+getAdvertisedUrl(): string
+
+/**
  * Register a named route. Duplicate (kind, path) throws — route patterns are
  * a composition-level contract, so a collision is a misconfiguration.
  * @param route - kind, path, and the owning handler or resource.
@@ -382,6 +388,22 @@ Source: [`packages/client/connection/src/index.ts`](../../packages/client/connec
 <a id="webserver-events"></a>
 
 ### `webserver/*` events
+
+<a id="webserveradvertised-url--bail"></a>
+
+#### `webserver/advertised-url` — bail
+
+Resolve the configured browser-facing application root.
+
+```ts cordis-catalog
+/**
+ * Resolve the configured browser-facing application root.
+ * @mode bail
+ */
+'webserver/advertised-url'(): string | undefined
+```
+
+Source: [`packages/host/webserver/src/index.ts`](../../packages/host/webserver/src/index.ts)
 
 <a id="webserverauthorize--bail"></a>
 

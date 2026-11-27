@@ -45,6 +45,11 @@ declare module '@deepseek-ai/cordis' {
   }
   interface Events {
     /**
+     * Resolve the configured browser-facing application root.
+     * @mode bail
+     */
+    'webserver/advertised-url'(): string | undefined
+    /**
      * Collect complete entry URLs for an advertised server address.
      * @param baseUrl - advertised server base URL without provider credentials.
      * @param entries - entries appended synchronously in listener order.
@@ -509,6 +514,14 @@ export class WebServer extends Service {
     }
     if (this.listenedPort === undefined) throw new Error('webserver: origin read before the listener bound a port')
     return `${this.protocol}//${host}:${String(this.listenedPort)}`
+  }
+
+  /**
+   * Resolve the browser-facing root used to build callbacks through a reverse proxy.
+   * @returns the advertised application root, or the listener origin.
+   */
+  getAdvertisedUrl(): string {
+    return this.ctx.bail(this, 'webserver/advertised-url') ?? this.getOrigin()
   }
 
   /**

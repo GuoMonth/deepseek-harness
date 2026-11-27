@@ -186,16 +186,16 @@ export class McpOAuthAuthorization {
     const state = randomBytes(32).toString('base64url')
     const path = '/mcp/oauth/callback/' + createHash('sha256').update(this.credentials.key).digest('hex')
     try {
-      const redirectUri = webServer.getOrigin() + path
-      const redirect = new URL(redirectUri)
+      const redirect = new URL(path.slice(1), webServer.getAdvertisedUrl())
+      const redirectUri = redirect.href
       attempt.removeCallback = this.ctx.effect(() => {
         // The authorization server's redirect is a cross-site navigation, which route admission refuses,
-        // so the callback answers before route selection and only for the redirect URI's own authority and path.
+        // so match the public authority and the listener route after any proxy mount prefix is removed.
         const remove = this.ctx.on('webserver/request', async (req, res, next) => {
           let received: URL
           try { received = new URL(req.url ?? '/', `${redirect.protocol}//${req.headers.host ?? ''}`) }
           catch { await next(); return }
-          if (received.origin !== redirect.origin || received.pathname !== redirect.pathname) { await next(); return }
+          if (received.origin !== redirect.origin || received.pathname !== path) { await next(); return }
           const reply = (status: number, page: keyof typeof CALLBACK_PAGES = 'incomplete'): void => {
             res.writeHead(status, {
               'cache-control': 'no-store',
